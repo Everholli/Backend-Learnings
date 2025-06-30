@@ -4,12 +4,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js" 
+    "dev": "nodemon src/index.js"
   },
   "author": "Shruti Mishra",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "nodemon": "^3.1.10"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
   }
 }
