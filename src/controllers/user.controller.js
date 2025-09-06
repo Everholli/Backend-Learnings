@@ -2,12 +2,13 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { User} from "../models/user.model.js"
 import { APIError } from '../utils/APIerror.js';
 import { APIResponse } from '../utils/APIResponse.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
 const registerUser = asyncHandler( async (req, res) => {
 
     // 1st validation
     const {  username, fullname, email, password } = req.body
-    console.log("email: ", email);
+    // console.log("email: ", email);
 
     // 2nd validation
 
@@ -22,7 +23,7 @@ const registerUser = asyncHandler( async (req, res) => {
         "$or": [ { email },{ username } ]
     })
     if (existeduser) {
-        throw new APIError("User already exists", 400);
+        throw new APIError(409, "User already exists");
     }
 
     // 4th check for avatar, cover photo
@@ -30,18 +31,18 @@ const registerUser = asyncHandler( async (req, res) => {
     const avatarlocalpath = req.file?.avatar[0]?.path
     const coverlocalpath = req.file?.cover[0]?.path
 
-    if (!avatarlocalpath) {
-        throw new APIError("Avatar is required", 400);
-    }
+    // if (!avatarlocalpath) {
+    //     throw new APIError("Avatar is required", 400);
+    // }
     // console.log(req.file);
     // console.log(req.file?.cover[0]?.path);
 
-    const avatar = await uploadOnCloud(avatarlocalpath)
-    const cover = await uploadOnCloud(coverlocalpath)
+    const avatar = await uploadOnCloudinary(avatarlocalpath)
+    const cover = await uploadOnCloudinary(coverlocalpath)
 
-    if (!avatar) {
-        throw new APIError("Avatar is required", 400);
-    }
+    // if (!avatar) {
+    //     throw new APIError("Avatar is required", 400);
+    // }
 
     // 5th create user
     const user = await User.create({
@@ -49,8 +50,8 @@ const registerUser = asyncHandler( async (req, res) => {
         fullname,
         email,
         password,
-        avatar: avatar.url,
-        cover: cover.url
+        // avatar: avatar.url || "",
+        // cover: cover.url || ""
    })
 
    const createdUser = await User.findById(user._id).select("-password -refreshToken -watchHistory -__v")
