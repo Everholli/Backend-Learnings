@@ -4,6 +4,21 @@ import { APIError } from '../utils/APIerror.js';
 import { APIResponse } from '../utils/APIResponse.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 
+const generateTokens = async (userId) => {
+    try{
+        const user = User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateAccessToken()
+
+        user.refreshToken = refreshToken;
+        await user.save({ValidationBeforeSave: false})
+
+        return {accessToken, refreshToken}
+    }catch{
+        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+    }
+}
+
 const registerUser = asyncHandler( async (req, res) => {
 
     // 1st validation
@@ -64,6 +79,24 @@ const registerUser = asyncHandler( async (req, res) => {
     new APIResponse(200, createdUser, "User created successfully")
    )
 
+})
+
+const loginUser = asyncHandler( async (req, res) => {
+    const {username, email, password} = req.body
+    
+    const user = User.findOne({
+        $or: [{username} , {email}],
+    })
+
+    if(!user) {
+        throw new APIError(400, "Üser doesn't exist");
+    }
+
+    const hashPassword = await bcrypt.compare(password, user.password)
+
+    if(!hashPassword){
+        throw new APIError(400, "Inappropriate Password")
+    }
 
 })
 
