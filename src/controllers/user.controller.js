@@ -21,21 +21,6 @@ const generateTokens = async (userId) => {
 
 }
 
-const generateTokens = async (userId) => {
-    try{
-        const user = User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateAccessToken()
-
-        user.refreshToken = refreshToken;
-        await user.save({ValidationBeforeSave: false})
-
-        return {accessToken, refreshToken}
-    }catch{
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
-    }
-}
-
 const registerUser = asyncHandler( async (req, res) => {
 
     // 1st validation
@@ -98,6 +83,49 @@ const registerUser = asyncHandler( async (req, res) => {
 
 })
 
+const loginUser = asyncHandler( async (req, res) => {
+    const {username, email, password} = req.body
+    
+    const user = User.findOne({
+        $or: [{username} , {email}],
+    })
+
+    if(!user) {
+        throw new APIError(400, "Üser doesn't exist");
+    }
+
+    const hashPassword = await bcrypt.compare(password, user.password)
+
+    if(!hashPassword){
+        throw new APIError(400, "Inappropriate Password")
+    }
+
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(
+            200, 
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User logged In Successfully"
+        )
+    )
+
+
+
+})
 
 const logoutUser = asyncHandler( async (req, res) => {
     await User.findByIdAndUpdate(
@@ -121,29 +149,12 @@ const logoutUser = asyncHandler( async (req, res) => {
     .json(
         new APIResponse(200, null, "Logout successful")
     )
-=======
-const loginUser = asyncHandler( async (req, res) => {
-    const {username, email, password} = req.body
-    
-    const user = User.findOne({
-        $or: [{username} , {email}],
-    })
-
-    if(!user) {
-        throw new APIError(400, "Üser doesn't exist");
-    }
-
-    const hashPassword = await bcrypt.compare(password, user.password)
-
-    if(!hashPassword){
-        throw new APIError(400, "Inappropriate Password")
-    }
->>>>>>> aab20c4b8fa0a26cf5a7950913ad04218b105162
-
 })
+
+
 
 export  {
     registerUser,
-    loggInUser,
+    loginUser,
     logoutUser
 } 
