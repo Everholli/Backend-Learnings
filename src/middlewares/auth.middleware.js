@@ -1,9 +1,9 @@
-import { jwt } from "jsonwebtoken";
-import asyncHandler from "express-async-handler";
-import User from "../models/user.model.js";
 import { APIError } from "../utils/APIerror.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import jwt from "jsonwebtoken"
+import { User } from "../models/user.model.js";
 
-const verifyJWT   = asyncHandler( async (req, res, next) => {
+const verifyJWT   = asyncHandler( async (req, _, next) => {
     try {
         const token = req.cookies?.accessToken || req.headers("Authorization")?.replace("Bearer", "")
 
@@ -11,7 +11,7 @@ const verifyJWT   = asyncHandler( async (req, res, next) => {
             throw new APIError("Not authorized, no token", 401);
         }
 
-        const decodeToken = jwt.verify(token, env.ACCESS_TOKEN_SECRET)
+        const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
         const user = await User.findById(decodeToken._id).select("-password -refreshToken");
 
@@ -23,6 +23,7 @@ const verifyJWT   = asyncHandler( async (req, res, next) => {
         next();
 
     } catch (error) {
-        throw new APIError("Not authorized, token failed", 401);
+        throw new APIError(401, error?.message || "Invalid access token");
     }
 })
+export { verifyJWT }

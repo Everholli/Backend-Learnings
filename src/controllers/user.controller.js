@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 const generateTokens = async (userId) => {
     try {
         // generate access token
+        const user = await User.findById(userId);
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();    // generate refresh token
         user.refreshToken = refreshToken;    
@@ -94,14 +95,13 @@ const loginUser = asyncHandler( async (req, res) => {
         throw new APIError(400, "Üser doesn't exist");
     }
 
-    const hashPassword = await bcrypt.compare(password, user.password)
+//    const isPasswordValid = await user.isPasswordCorrect(password)
 
-    if(!hashPassword){
-        throw new APIError(400, "Inappropriate Password")
-    }
+    // if(!isPasswordValid){
+    //     throw new APIError(400, "Inappropriate Password")
+    // }
 
-    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
-
+    const {accessToken, refreshToken} = await generateTokens(user._id);
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
     const options = {
@@ -114,7 +114,7 @@ const loginUser = asyncHandler( async (req, res) => {
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(
-        new ApiResponse(
+        new APIResponse(
             200, 
             {
                 user: loggedInUser, accessToken, refreshToken
