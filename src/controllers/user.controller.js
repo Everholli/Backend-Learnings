@@ -3,7 +3,8 @@ import { User} from "../models/user.model.js"
 import { APIError } from '../utils/APIerror.js';
 import { APIResponse } from '../utils/APIResponse.js';
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
-import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
+
 
 const generateTokens = async (userId) => {
     try {
@@ -382,6 +383,46 @@ const getUserChannelProfile = asyncHandler( async(req, res) => {
     )
 })
 
+const getWatchHistory =asyncHandler(async(req, res) =>{
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id : new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "watchHistory",
+                localField: "owner",
+                foreignField: "_id",
+                as: "watcHistory",
+                pipeline: [{
+                    $lookup: {
+                        from: "users",
+                        localField: "owner",
+                        foreignField: "_id",
+                        as: "owner",
+                        pipeline:{
+                            $project: {
+                                username: 1,
+                                fullname: 1,
+                                avatar: 1,
+                            }
+                        }
+                    }
+                }]
+            }
+        },
+        {
+            $addFields: {
+                $owner:{
+                    $First: "owner"
+                }
+            }
+        }
+    ])
+})
+
 export  {
     registerUser,
     loginUser,
@@ -392,5 +433,6 @@ export  {
     updateAccDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 } 
