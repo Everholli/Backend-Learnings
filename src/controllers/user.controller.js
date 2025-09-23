@@ -50,18 +50,18 @@ const registerUser = asyncHandler( async (req, res) => {
     const avatarlocalpath = req.file?.avatar[0]?.path
     const coverlocalpath = req.file?.cover[0]?.path
 
-    // if (!avatarlocalpath) {
-    //     throw new APIError("Avatar is required", 400);
-    // }
-    // console.log(req.file);
-    // console.log(req.file?.cover[0]?.path);
+    if (!avatarlocalpath) {
+        throw new APIError("Avatar is required", 400);
+    }
+    console.log(req.file);
+    console.log(req.file?.cover[0]?.path);
 
     const avatar = await uploadOnCloudinary(avatarlocalpath)
     const cover = await uploadOnCloudinary(coverlocalpath)
 
-    // if (!avatar) {
-    //     throw new APIError("Avatar is required", 400);
-    // }
+    if (!avatar) {
+        throw new APIError("Avatar is required", 400);
+    }
 
     // 5th create user
     const user = await User.create({
@@ -79,7 +79,9 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new APIError("User creation failed", 500);
    }
 
-   return res.status(201).json(
+   return res.
+   status(201)
+   .json(
     new APIResponse(200, createdUser, "User created successfully")
    )
 
