@@ -158,7 +158,7 @@ const logoutUser = asyncHandler( async (req, res) => {
     )
 })
 
-const refreshAcessToken =  asyncHandler( async (req, res) => {
+const refreshAccessToken =  asyncHandler( async (req, res) => {
     const  {incomingRefreshToken}  = req.cookies.refreshToken || req.body.refreshToken;
 
     if (!incomingRefreshToken) {
@@ -427,7 +427,7 @@ export  {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAcessToken,
+    refreshAccessToken,
     updatePassword,
     getCurrentUser,
     updateAccDetails,
